@@ -301,10 +301,53 @@ function buildHistory() {
   return { cards, qs };
 }
 
-const pb = buildPbro(), hs = buildHistory();
+/* ---------- topic 3: Classes (from AX Meeting 3 slides) ---------- */
+function buildClasses() {
+  const classes = [
+    { name:'Alpha Theta', regent:'Kevin Cai', pm:'Andrew Zhang, Ashley Bui', pc:'Amber Atac', hashtag:'#yappathetas' },
+    { name:'Alpha Iota', regent:'Ethan Auyeung', pm:'Andy Wu, Andy Chen', pc:'Natalie Hoang', hashtag:'#KeepChomAndCarryOn' },
+    { name:'Alpha Kappa', regent:'Jessica Zhang', pm:'Jennica Son, Andrew Phung', pc:'Paul Tran', hashtag:'#alphahandikappad' },
+    { name:'Alpha Lambda', regent:'Senara Subasinghe', pm:'Cassandra Aquino, Matthew Lim', pc:'Charles Oh', hashtag:'#ngmi' },
+    { name:'Alpha Mu', regent:'Adrian Stone', pm:'Brandon Matson, Natalie Hoang', pc:'Reimer Dimalanta', hashtag:'#franks4skin' },
+    { name:'Alpha Nu', regent:'Sebastian James', pm:'Shanta Joshi, Shell Wada', pc:'Lana Moraleda', hashtag:'#horsesdontstop' }
+  ];
+  const fields = [
+    { key:'regent', label:'Regent', cat:'Regents' },
+    { key:'pm', label:'PM', cat:'PMs' },
+    { key:'pc', label:'PC', cat:'PCs' },
+    { key:'hashtag', label:'hashtag', cat:'Hashtags' }
+  ];
+  const cards = [], qs = [];
+  classes.forEach((c, i) => {
+    cards.push({
+      id:'c' + i + 'overview', cat:'Class overview', front:c.name + ' Class',
+      back:'Regent: ' + c.regent + '\nPM: ' + c.pm + '\nPC: ' + c.pc + '\nHashtag: ' + c.hashtag
+    });
+    fields.forEach((f, j) => {
+      const values = classes.map(x => x[f.key]);
+      const others = values.filter(v => v !== c[f.key]);
+      const id = 'c' + i + f.key;
+      const prompt = f.key === 'hashtag'
+        ? 'What is the hashtag for the ' + c.name + ' class?'
+        : 'Who was the ' + f.label + ' for the ' + c.name + ' class?';
+      cards.push({ id, cat:f.cat, front:prompt, back:c[f.key] });
+      qs.push({ cat:f.cat, prompt, correct:c[f.key], pool:others });
+      qs.push({
+        cat:f.cat,
+        prompt:(f.key === 'hashtag' ? 'Which class used ' + c[f.key] + '?' : 'Which class had ' + c[f.key] + ' as ' + (f.key === 'pm' ? 'PMs' : f.label) + '?'),
+        correct:c.name,
+        pool:classes.map(x => x.name).filter(name => name !== c.name)
+      });
+    });
+  });
+  return { cards, qs };
+}
+
+const pb = buildPbro(), hs = buildHistory(), cl = buildClasses();
 const TOPICS = [
   { id:'pbro', name:'Pbro Information', blurb:'Everyone in the pledge class: majors, hometowns, birthdays, fun facts and sentimental items.', cards:pb.cards, qs:pb.qs },
-  { id:'history', name:'TT History', blurb:'National history, founders, motto and symbols, leadership, chapters and competitors, from AX Meeting 2.', cards:hs.cards, qs:hs.qs }
+  { id:'history', name:'TT History', blurb:'National history, founders, motto and symbols, leadership, chapters and competitors, from AX Meeting 2.', cards:hs.cards, qs:hs.qs },
+  { id:'classes', name:'Classes', blurb:'Regents, pledge marshals, pledge class presidents and hashtags for the Alpha Theta through Alpha Nu classes.', cards:cl.cards, qs:cl.qs }
 ];
 
 /* ---------- state ---------- */

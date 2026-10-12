@@ -1,0 +1,561 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex, nofollow">
+<style>html{color-scheme:light dark}body{margin:0}</style>
+<title>Quiz Prep</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wght@500;700;800&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@500&display=swap">
+<style>
+/* Layout: one centered column. Topic tabs on top, mode switch (Flashcards / Test) under the topic header.
+   Garnet and gold come from the fraternity's own colors; garnet is used for the one big surface, the flashcard front. */
+:root {
+  --bg: #f6f3f3;
+  --surface: #ffffff;
+  --surface-2: #efe8e9;
+  --fg: #1d1416;
+  --muted: #6b5d60;
+  --line: #ddd2d4;
+  --accent: #8c1d2c;
+  --accent-fg: #ffffff;
+  --gold: #8a6212;
+  --good: #1f7a4d;
+  --good-bg: #e2f2ea;
+  --bad: #b3261e;
+  --bad-bg: #fbe6e4;
+  --font-display: "Archivo", "Arial Narrow", Arial, sans-serif;
+  --font-body: "IBM Plex Sans", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --font-mono: "IBM Plex Mono", ui-monospace, Menlo, Consolas, monospace;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #151012; --surface: #1f171a; --surface-2: #2a2023; --fg: #f1e8ea; --muted: #b3a3a7; --line: #3a2d31;
+    --accent: #c4404f; --accent-fg: #ffffff; --gold: #e0b04a;
+    --good: #5cc08d; --good-bg: #17302374; --bad: #ff8f86; --bad-bg: #3d1b1a;
+    color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #151012; --surface: #1f171a; --surface-2: #2a2023; --fg: #f1e8ea; --muted: #b3a3a7; --line: #3a2d31;
+  --accent: #c4404f; --accent-fg: #ffffff; --gold: #e0b04a;
+  --good: #5cc08d; --good-bg: #17302374; --bad: #ff8f86; --bad-bg: #3d1b1a;
+  color-scheme: dark;
+}
+* { box-sizing: border-box; }
+body { background: var(--bg); color: var(--fg); font-family: var(--font-body); font-size: 15px; line-height: 1.5; }
+.wrap { max-width: 880px; margin-inline: auto; padding-inline: 16px; padding-block: 24px 48px; }
+button, select { font: inherit; color: inherit; }
+button { cursor: pointer; }
+:focus-visible { outline: 2px solid var(--gold); outline-offset: 2px; }
+
+header { display: flex; flex-direction: column; gap: 4px; margin-bottom: 20px; }
+.eyebrow { font-family: var(--font-mono); font-size: 12px; letter-spacing: .08em; text-transform: uppercase; color: var(--muted); }
+h1 { font-family: var(--font-display); font-weight: 800; font-size: clamp(30px, 6vw, 44px); line-height: 1.05; margin: 0; letter-spacing: -.01em; text-wrap: balance; }
+
+.tabs { display: flex; gap: 4px; overflow-x: auto; border-bottom: 1px solid var(--line); margin-bottom: 20px; }
+.tab { flex: none; display: flex; align-items: baseline; gap: 10px; padding: 10px 14px; background: none; border: 0; border-bottom: 3px solid transparent; margin-bottom: -1px; font-family: var(--font-display); font-weight: 700; font-size: 16px; color: var(--muted); }
+.tab:hover { color: var(--fg); }
+.tab[aria-selected="true"] { color: var(--fg); border-bottom-color: var(--accent); }
+.tab .count { font-family: var(--font-mono); font-size: 12px; font-weight: 500; color: var(--muted); font-variant-numeric: tabular-nums; }
+
+.topic-head { display: grid; grid-template-columns: 1fr auto; gap: 16px 24px; align-items: end; margin-bottom: 16px; }
+.topic-head > * { min-width: 0; }
+h2 { font-family: var(--font-display); font-weight: 800; font-size: 24px; margin: 0 0 2px; }
+.blurb { margin: 0; color: var(--muted); max-width: 60ch; }
+.seg { display: inline-flex; background: var(--surface-2); border-radius: 8px; padding: 3px; gap: 2px; }
+.seg button { border: 0; background: none; padding: 7px 16px; border-radius: 6px; font-weight: 600; color: var(--muted); }
+.seg button[aria-pressed="true"] { background: var(--surface); color: var(--fg); box-shadow: 0 1px 2px rgba(0,0,0,.18); }
+
+.stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 12px 32px; padding-block: 14px; border-block: 1px solid var(--line); margin-bottom: 20px; }
+.stat-label { font-family: var(--font-mono); font-size: 12px; letter-spacing: .06em; text-transform: uppercase; color: var(--muted); }
+.stat-value { font-family: var(--font-display); font-weight: 800; font-size: 22px; font-variant-numeric: tabular-nums; }
+.stat-value small { font-family: var(--font-body); font-weight: 500; font-size: 13px; color: var(--muted); }
+.bar { height: 6px; border-radius: 3px; background: var(--surface-2); margin-top: 6px; overflow: hidden; }
+.bar > i { display: block; height: 100%; background: var(--gold); border-radius: 3px; transition: width .25s; }
+
+.controls { display: flex; flex-wrap: wrap; gap: 8px 12px; align-items: center; margin-bottom: 16px; }
+.controls label { display: flex; align-items: center; gap: 8px; color: var(--muted); font-size: 14px; }
+select { background: var(--surface); border: 1px solid var(--line); border-radius: 6px; padding: 6px 10px; }
+.btn { background: var(--surface); border: 1px solid var(--line); border-radius: 8px; padding: 8px 14px; font-weight: 600; }
+.btn:hover { border-color: var(--muted); }
+.btn.primary { background: var(--accent); border-color: var(--accent); color: var(--accent-fg); }
+.btn.primary:hover { filter: brightness(1.08); }
+.btn.good { background: var(--good); border-color: var(--good); color: #fff; }
+.btn:disabled { opacity: .45; cursor: default; }
+.btn.ghost { border-color: transparent; background: none; color: var(--muted); }
+.spacer { flex: 1; }
+
+/* flashcard */
+.flip { perspective: 1400px; cursor: pointer; }
+.flip-inner { display: grid; transition: transform .45s; transform-style: preserve-3d; }
+.flip.is-flipped .flip-inner { transform: rotateY(180deg); }
+.face { grid-area: 1 / 1; min-height: 300px; border-radius: 14px; padding: 28px; display: flex; flex-direction: column; gap: 12px; backface-visibility: hidden; -webkit-backface-visibility: hidden; min-width: 0; }
+.face.front { background: var(--accent); color: var(--accent-fg); justify-content: center; }
+.face.back { background: var(--surface); border: 1px solid var(--line); transform: rotateY(180deg); justify-content: center; }
+.face .cat { font-family: var(--font-mono); font-size: 12px; letter-spacing: .08em; text-transform: uppercase; opacity: .8; }
+.face.back .cat { color: var(--gold); opacity: 1; }
+.face .text { font-family: var(--font-display); font-weight: 700; font-size: clamp(22px, 4.2vw, 30px); line-height: 1.25; white-space: pre-line; overflow-wrap: anywhere; text-wrap: balance; }
+.face.back .text { font-family: var(--font-body); font-weight: 500; font-size: clamp(16px, 2.6vw, 19px); line-height: 1.6; text-wrap: pretty; }
+.hint { font-size: 13px; opacity: .75; margin-top: auto; }
+.chip { align-self: flex-start; font-family: var(--font-mono); font-size: 11px; letter-spacing: .06em; text-transform: uppercase; padding: 3px 8px; border-radius: 99px; background: var(--good-bg); color: var(--good); }
+.face.front .chip { background: rgba(255,255,255,.18); color: #fff; }
+.card-nav { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; margin-top: 14px; }
+.counter { font-family: var(--font-mono); font-size: 13px; color: var(--muted); font-variant-numeric: tabular-nums; }
+.empty { padding: 40px 16px; text-align: center; border: 1px dashed var(--line); border-radius: 14px; display: flex; flex-direction: column; gap: 12px; align-items: center; }
+
+/* test */
+.panel { background: var(--surface); border: 1px solid var(--line); border-radius: 14px; padding: 24px; }
+.setup { display: flex; flex-direction: column; gap: 16px; align-items: flex-start; }
+.setup h3, .result h3 { font-family: var(--font-display); font-weight: 800; font-size: 20px; margin: 0; }
+.q-meta { display: flex; justify-content: space-between; gap: 12px; font-family: var(--font-mono); font-size: 13px; color: var(--muted); font-variant-numeric: tabular-nums; margin-bottom: 8px; }
+.q-prompt { font-family: var(--font-display); font-weight: 700; font-size: clamp(20px, 3.6vw, 26px); line-height: 1.3; margin: 18px 0; white-space: pre-line; overflow-wrap: anywhere; text-wrap: balance; }
+.opts { display: grid; gap: 10px; }
+.opt { display: grid; grid-template-columns: 28px 1fr; gap: 10px; text-align: left; align-items: start; background: var(--surface); border: 1.5px solid var(--line); border-radius: 10px; padding: 12px 14px; min-width: 0; }
+.opt .k { font-family: var(--font-mono); color: var(--muted); }
+.opt span:last-child { overflow-wrap: anywhere; }
+.opt:hover:not(:disabled) { border-color: var(--accent); }
+.opt:disabled { cursor: default; }
+.opt.right { border-color: var(--good); background: var(--good-bg); }
+.opt.wrong { border-color: var(--bad); background: var(--bad-bg); }
+.fr { display: flex; flex-wrap: wrap; gap: 8px; }
+.fr input { flex: 1 1 220px; min-width: 0; background: var(--surface); color: var(--fg); border: 1.5px solid var(--line); border-radius: 10px; padding: 12px 14px; font: inherit; }
+.fr input:focus-visible { border-color: var(--accent); outline-offset: 0; }
+.fr input:disabled { background: var(--surface-2); }
+.feedback { margin-top: 14px; display: flex; flex-wrap: wrap; align-items: center; gap: 12px; }
+.feedback .note { flex: 1; min-width: 200px; color: var(--muted); }
+.score { font-family: var(--font-display); font-weight: 800; font-size: 56px; line-height: 1; font-variant-numeric: tabular-nums; }
+.score small { font-size: 22px; color: var(--muted); font-weight: 700; }
+.result { display: flex; flex-direction: column; gap: 14px; }
+.missed { list-style: none; margin: 0; padding: 0; display: grid; gap: 10px; }
+.missed li { border: 1px solid var(--line); border-radius: 10px; padding: 12px 14px; display: grid; gap: 2px; }
+.missed .p { font-weight: 600; white-space: pre-line; overflow-wrap: anywhere; }
+.missed .yours { color: var(--bad); overflow-wrap: anywhere; }
+.missed .right { color: var(--good); overflow-wrap: anywhere; }
+.row { display: flex; flex-wrap: wrap; gap: 8px; }
+
+@media (max-width: 560px) {
+  .topic-head { grid-template-columns: 1fr; }
+  .face { padding: 20px; min-height: 280px; }
+  .panel { padding: 16px; }
+}
+@media (prefers-reduced-motion: reduce) { .flip-inner, .bar > i { transition: none; } }
+</style>
+
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <div class="eyebrow">Weekly quizzes</div>
+    <h1>Quiz Prep</h1>
+  </header>
+  <div class="tabs" role="tablist" id="tabs"></div>
+  <main id="panel"></main>
+</div>
+
+<script>
+/* ---------- helpers ---------- */
+const esc = s => String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const shuffle = a => { a = a.slice(); for (let i = a.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [a[i], a[j]] = [a[j], a[i]]; } return a; };
+const sample = (a, n) => shuffle(a).slice(0, n);
+const uniq = a => [...new Set(a)];
+
+/* ---------- saved progress (this browser only) ---------- */
+let store = { cards: {}, best: {}, tab: null };
+try { const s = localStorage.getItem('quizprep-v1'); if (s) store = Object.assign(store, JSON.parse(s)); } catch (e) {}
+const save = () => { try { localStorage.setItem('quizprep-v1', JSON.stringify(store)); } catch (e) {} };
+
+/* ---------- topic 1: Pbro Information (from the pledge spreadsheet) ---------- */
+const P = [
+  { n:'Haoyu (Samuel) Sun', major:'Mechanical Engineering', year:'Freshman', home:'Chino Hills, CA', bday:'February 4', food:'', item:'Picture with my friend',
+    facts:['Play Piano','1 younger brother','Love Kdrama/BTS','Down for Sidequesting','Love Vlogging'] },
+  { n:'Isaac Mason', major:'Aerospace Engineering', year:'Freshman', home:'Wiesbaden, Germany', bday:'September 9', food:'', item:'Deck of mental health playing cards',
+    facts:['Love K-pop','Taekwondo','Valorant n Apex Legends','Longboards around campus','Love snowboarding and skiing'] },
+  { n:'Phoebe Morris', major:'Applied Math & Data Science', year:'Freshman', home:'Huntington Beach, CA', bday:'November 22', food:'Olives', item:'Gold necklace from mom',
+    facts:['1 younger sister','Peach mango bang is favorite energy drink','Karaoke: Drake and Drive, Bruno Mars, old Kanye, Keem','Lived on a farm in Japan one summer','Ocean is happy place, cliff jumping, tanning'] },
+  { n:'Mack Tam', major:'Astrophysics', year:'Freshman', home:'Jericho, NY', bday:'August 23', food:'', item:'Grad cap from lil sis',
+    facts:['Astrophotography','Card tricks','Follows soccer','Seen Obama','Plays a lot of chess'] },
+  { n:'Emma Ly', major:'Math + IEOR', year:'Freshman', home:'Hercules, CA', bday:'July 21', food:'', item:'Jellycat bunny from roommate',
+    facts:['Cat named Cement','Can do the splits','Sang opera in high school','900 wins in Word Hunt','Loves Ariana Grande'] },
+  { n:'Daniel Kim', major:'Bioengineering', year:'Freshman', home:'Riverside, CA', bday:'July 19', food:'', item:"Dad's belt",
+    facts:['Drove from California to New York','Ran 11 miles before',"Middle name is his dad's name split in half, one half to him and one to his brother",'1056 hrs on Valorant','Loves singing'] },
+  { n:'Elise Polsley', major:'Mechanical Engineering', year:'Freshman', home:'Walnut Creek, CA', bday:'May 5', food:'', item:'Bracelet',
+    facts:['4 toenails fallen off','Homecoming queen','Top 5% in Block Blast','Dyed her dog American flag colors','Hates donuts'] },
+  { n:'Sanya Kapoor', major:'Neuroscience', year:'Freshman', home:'San Diego, CA', bday:'May 3', food:'', item:'Origami swan, souvenir from Japan',
+    facts:['Played oboe for 7 years','Pet parakeet','Plays Roblox','Went to Norway this past summer','1 older brother'] },
+  { n:'Jasmine Hou', major:'Statistics + Econ', year:'Sophomore', home:'Irvine, CA', bday:'July 20', food:'Pho', item:'Graduation polaroid',
+    facts:['1 older sister','Plays tennis','Built a Clash chest IRL','Played piano','Favorite boba is Yifang'] },
+  { n:'Yunting (Tingting) Yao', major:'Bioengineering', year:'Sophomore', home:'Torrance, CA', bday:'July 2', food:'', item:'Bracelet',
+    facts:['Born and raised in Shanghai','Cooks horrible','Chronic outfit repeater','Valorant','Loves popcorn chicken from Boba Ninja'] },
+  { n:'Raina Bae', major:'Statistics + Data Science', year:'Sophomore', home:'Valencia, CA', bday:'December 6', food:'', item:'Squishy',
+    facts:['Friends with Zhangliang Malatang workers','Love sidequesting','Works at Binge','Bilingual','Big matcha/coffee fan'] },
+  { n:'Nolan Wong', major:'Mechanical Engineering', year:'Junior', home:'San Francisco, CA', bday:'November 16', food:'Steak', item:'California Boater ID',
+    facts:['Plays basketball','Loves cooking','1 older brother and sister','Loves music festivals, concerts and raves','Studied abroad in Spain'] },
+  { n:'Aayush Rashinkar', major:'Applied Math / CS', year:'Junior', home:'Newbury Park, CA', bday:'February 25', food:'', item:'Doraemon pouch from aunt',
+    facts:['1st degree black belt','Designs graphics for clothes','Rocket League Champ 3 in 2020','Can make a water drop noise','Can solve a Rubik\'s cube'] },
+  { n:'Baylen Chan', major:'Computer Science', year:'Junior', home:'Cerritos, CA', bday:'February 22', food:'', item:'Family photo',
+    facts:['Plays soccer','Has 2 parrots','1 older sister','Used to be able to do the splits','Loves Bruno Mars'] },
+  { n:'Goten Huynh', major:'Mechanical Engineering', year:'Sophomore', home:'Huntington Beach, CA', bday:'February 21', food:'', item:'Challenge coin',
+    facts:['Named after DBZ','4 half siblings','In the Navy','Beer connoisseur','Big raver'] }
+];
+/* Fun facts that two or more people share (or nearly share) are left out of "who is this?" questions. */
+const AMBIGUOUS = new Set(['1 older sister','1 older brother','plays soccer','follows soccer','play piano','played piano','valorant','valorant n apex legends','1056 hrs on valorant','love sidequesting','down for sidequesting','can do the splits','used to be able to do the splits','loves music festivals, concerts and raves','big raver','loves bruno mars','loves singing','1 older brother and sister']);
+const uniqueFacts = p => p.facts.filter(f => !AMBIGUOUS.has(f.toLowerCase()));
+
+function buildPbro() {
+  const cards = [], qs = [];
+  const names = P.map(p => p.n);
+  const homeCount = {}; P.forEach(p => homeCount[p.home] = (homeCount[p.home] || 0) + 1);
+  const others = (field, p) => uniq(P.map(x => x[field]).filter(v => v && v !== p[field]));
+  P.forEach((p, i) => {
+    const lines = ['Major: ' + p.major, 'Year: ' + p.year, 'From: ' + p.home, 'Birthday: ' + p.bday];
+    if (p.food) lines.push('Favorite food: ' + p.food);
+    lines.push('Sentimental item: ' + p.item, 'Fun facts:');
+    p.facts.forEach(f => lines.push('• ' + f));
+    cards.push({ id: 'p' + i + 'a', cat: 'Profiles', front: p.n, back: lines.join('\n') });
+    const clue = uniqueFacts(p)[0];
+    cards.push({ id: 'p' + i + 'b', cat: 'Who is this?', front: 'Who is this?\n\nFrom ' + p.home + '\nStudies ' + p.major + '\n“' + clue + '”', back: p.n + '\n\nSentimental item: ' + p.item });
+
+    qs.push({ cat:'Hometowns', prompt:'Where is ' + p.n + ' from?', correct:p.home, pool:others('home', p) });
+    if (homeCount[p.home] === 1) qs.push({ cat:'Hometowns', prompt:'Who is from ' + p.home + '?', correct:p.n, pool:names.filter(n => n !== p.n) });
+    qs.push({ cat:'Majors', prompt:'What does ' + p.n + ' study?', correct:p.major, pool:others('major', p) });
+    qs.push({ cat:'Years', prompt:'What year is ' + p.n + '?', correct:p.year, pool:others('year', p) });
+    qs.push({ cat:'Birthdays', prompt:'When is ' + p.n + '’s birthday?', correct:p.bday, pool:others('bday', p) });
+    qs.push({ cat:'Sentimental items', prompt:'What is ' + p.n + '’s sentimental item?', correct:p.item, pool:others('item', p) });
+    if (p.food) qs.push({ cat:'Favorite foods', prompt:'Whose favorite food is ' + p.food.toLowerCase() + '?', correct:p.n, pool:names.filter(n => n !== p.n) });
+    uniqueFacts(p).forEach(f => qs.push({ cat:'Fun facts', prompt:'Who is this?\n“' + f + '”', correct:p.n, pool:names.filter(n => n !== p.n) }));
+  });
+  return { cards, qs };
+}
+
+/* ---------- topic 2: TT History (from AX Meeting 2 slides) ---------- */
+function buildHistory() {
+  const cards = [], qs = [];
+  let n = 0;
+  const both = (cat, q, a, d, note) => { const id = 'h' + (n++); cards.push({ id, cat, front:q, back:a + (note ? '\n\n' + note : '') }); qs.push({ cat, prompt:q, correct:a, pool:d, note }); };
+  const card = (cat, front, back) => cards.push({ id:'h' + (n++), cat, front, back });
+  const test = (cat, prompt, correct, pool, note) => qs.push({ cat, prompt, correct, pool, note });
+
+  // Founding
+  both('Founding', 'What sets Theta Tau apart nationally?', 'Largest and oldest engineering fraternity in the nation', ['Largest social fraternity in North America','Oldest professional business fraternity','First fraternity founded west of the Mississippi']);
+  both('Founding', 'When was Theta Tau founded?', 'October 15, 1904', ['October 15, 1924','November 15, 1904','October 1, 1904']);
+  both('Founding', 'What is October 15 called in Theta Tau?', 'Founder’s Day', ['Hammer Day','Charter Day','Garnet Day']);
+  both('Founding', 'Where was Theta Tau founded?', 'University of Minnesota', ['UC Berkeley','University of Michigan','University of Illinois']);
+  both('Founding', 'What is the formal name of the society?', 'Society of Hammer and Tongs', ['Society of Gears and Garnets','Society of the Red Rose','Society of Engineers and Craftsmen']);
+  card('Founding', 'Name the four founders.', 'Erich J. Schrader\nElwin L. Vinal\nIsaac B. Hanks\nWilliam M. Lewis');
+  test('Founding', 'Which of these was NOT one of the four founders?', 'Walter P. Hendricks', ['Erich J. Schrader','Isaac B. Hanks','William M. Lewis']);
+  test('Founding', 'Which of these was one of the four founders?', 'Elwin L. Vinal', ['Walter P. Hendricks','Edward J. Marlowe','Samuel B. Hanson']);
+
+  // Motto & symbols
+  both('Motto & symbols', 'What is the open motto of Theta Tau?', '“Whatsoever thy hand findeth to do, do it with thy might.”', ['“Whatsoever things are true, think on these things.”','“Let your light so shine before men.”','“To everything there is a season.”']);
+  both('Motto & symbols', 'Where does the open motto come from?', 'Ecclesiastes 9:10', ['Proverbs 16:3','Colossians 3:23','Ecclesiastes 3:1']);
+  card('Motto & symbols', 'List the symbols of Theta Tau.', 'Hammer and Tongs\nGears\nDark Red and Gold\nDark Red Garnet\nJacqueminot Rose');
+  test('Motto & symbols', 'What are Theta Tau’s colors?', 'Dark red and gold', ['Navy and gold','Black and gold','Dark red and silver']);
+  test('Motto & symbols', 'Which gemstone is a Theta Tau symbol?', 'Dark red garnet', ['Ruby','Amethyst','Citrine']);
+  test('Motto & symbols', 'Which rose is a Theta Tau symbol?', 'Jacqueminot Rose', ['Peace Rose','Black Baccara Rose','Damask Rose']);
+  test('Motto & symbols', 'Which of these is NOT a Theta Tau symbol?', 'Laurel wreath', ['Hammer and Tongs','Gears','Jacqueminot Rose']);
+
+  // Membership
+  both('Membership', 'How many chapters does Theta Tau have in total?', '111', ['86','104','120']);
+  both('Membership', 'How many of those chapters are active?', '86', ['111','92','75']);
+  both('Membership', 'How many colonies are there?', '4', ['2','6','9']);
+  both('Membership', 'How large is the network of initiated members?', 'Over 40,000', ['Over 10,000','Over 25,000','Over 75,000']);
+  both('Membership', 'Where is Theta Tau headquartered?', 'Miami, Florida', ['Minneapolis, Minnesota','Chicago, Illinois','Austin, Texas']);
+  both('Membership', 'How many regions does Theta Tau have?', '9', ['5','7','12'], 'Northwest and Southwest are 2 of the 9.');
+
+  // Leadership
+  both('Leadership', 'Who is the Grand Regent?', 'Stuart Kardian', ['James Gaffney','Andrew Johnson','Ben Ladick']);
+  both('Leadership', 'Which chapter is Stuart Kardian from?', 'Kappa Gamma (2006)', ['Epsilon (2011)','Rho Gamma (2018)','Delta Gamma (2020)']);
+  both('Leadership', 'Who is the Executive Director?', 'James Gaffney', ['Stuart Kardian','Lana Nguyen','Andrew Johnson']);
+  both('Leadership', 'Which chapter is James Gaffney from?', 'Kappa-Lambda of Kappa Sigma (2007)', ['Kappa Gamma (2006)','Epsilon (2011)','Rho Gamma (2018)']);
+  both('Leadership', 'Which of these is a Northwestern Regional Director?', 'Andrew Johnson', ['Stuart Kardian','James Gaffney','Lana Nguyen'], 'The two Northwestern Regional Directors are Andrew Johnson and Ben Ladick.');
+  both('Leadership', 'Which chapter is Andrew Johnson from?', 'Rho Gamma (2018)', ['Kappa Gamma (2006)','Epsilon (2011)','Delta Gamma (2020)']);
+  both('Leadership', 'Which chapter is Ben Ladick from?', 'Delta Gamma (2020)', ['Rho Gamma (2018)','Epsilon (2011)','Kappa Gamma (2006)']);
+  both('Leadership', 'Who is the past Professional Development Director?', 'Lana Nguyen', ['Ben Ladick','Andrew Johnson','James Gaffney']);
+  both('Leadership', 'Which chapter is Lana Nguyen from?', 'Epsilon (2011)', ['Kappa Gamma (2006)','Rho Gamma (2018)','Delta Gamma (2020)'], 'Epsilon is the UC Berkeley chapter.');
+  card('Leadership', 'Who are the national leaders?', 'Grand Regent: Stuart Kardian, Kappa Gamma (2006)\nExecutive Director: James Gaffney, Kappa-Lambda of Kappa Sigma (2007)\nNorthwestern Regional Directors: Andrew Johnson, Rho Gamma (2018) and Ben Ladick, Delta Gamma (2020)\nPast Professional Development Director: Lana Nguyen, Epsilon (2011)');
+
+  // Chapters
+  const nw = [['Epsilon','UC Berkeley'],['Lambda Delta','University of the Pacific'],['Mu Delta','UC Merced'],['Rho Delta','University of Nevada, Reno'],['Upsilon Epsilon','Santa Clara University'],['Omega Epsilon','San Jose State University'],['Theta Beta','University of Washington']];
+  const sw = [['Chi','University of Arizona'],['Delta Gamma','Arizona State University'],['Epsilon Delta','UC San Diego'],['Pi Delta','UC Irvine'],['Sigma Delta','UC Riverside'],['Upsilon Delta','UCLA'],['Kappa Epsilon','University of Southern California'],['Lambda Epsilon','University of San Diego'],['Xi Epsilon','CSU Long Beach'],['Omicron Epsilon','Northern Arizona University'],['Sigma Epsilon','UC Santa Barbara'],['Phi Epsilon','CSU Fullerton']];
+  const all = nw.map(c => [...c, 'Northwest']).concat(sw.map(c => [...c, 'Southwest']));
+  const schools = all.map(c => c[1]), chapters = all.map(c => c[0]);
+  all.forEach(([ch, sc, rg]) => {
+    cards.push({ id:'h' + (n++), cat:'Chapters', front:'Which school is the ' + ch + ' chapter at?', back:sc + '\n\n' + rg + ' Region' });
+    qs.push({ cat:'Chapters', prompt:'Which school is the ' + ch + ' chapter at?', correct:sc, pool:schools.filter(s => s !== sc), note:rg + ' Region' });
+    qs.push({ cat:'Chapters', prompt:'Which chapter is at ' + sc + '?', correct:ch, pool:chapters.filter(c => c !== ch), note:rg + ' Region' });
+  });
+  card('Chapters', 'Northwest Region: active chapters', nw.map(c => c[0] + ' – ' + c[1]).join('\n'));
+  card('Chapters', 'Southwest Region: active chapters', sw.map(c => c[0] + ' – ' + c[1]).join('\n'));
+  card('Chapters', 'Which two schools are colonies?', 'Cal Poly San Luis Obispo\nUniversity of Nevada, Las Vegas');
+  test('Chapters', 'Which of these schools is a colony?', 'Cal Poly San Luis Obispo', ['UC Merced','UC Irvine','UCLA']);
+  test('Chapters', 'Which of these schools is a colony?', 'University of Nevada, Las Vegas', ['University of Nevada, Reno','Northern Arizona University','Arizona State University']);
+
+  // Competitors
+  card('Competitors', 'Name the competing fraternities.', 'Alpha Chi Sigma*\nAlpha Omega Epsilon\nAlpha Rho Chi*\nAlpha Sigma Kappa\nKappa Eta Kappa\nPhi Sigma Rho*\nSigma Beta Epsilon\nScarab\nSigma Phi Delta\nSigma Rho\nTriangle*', '*Starred on the slide.');
+  cards[cards.length - 1].back = cards[cards.length - 1].back + '\n\n*Starred on the slide.';
+  [['Triangle',['Pi Kappa Alpha','Sigma Chi','Delta Tau Delta']],['Alpha Rho Chi',['Phi Delta Theta','Beta Theta Pi','Tau Kappa Epsilon']],['Phi Sigma Rho',['Sigma Alpha Epsilon','Alpha Tau Omega','Lambda Chi Alpha']],['Alpha Chi Sigma',['Kappa Alpha Psi','Zeta Beta Tau','Phi Kappa Tau']],['Scarab',['Sigma Nu','Theta Chi','Delta Upsilon']],['Sigma Rho',['Chi Phi','Pi Lambda Phi','Alpha Epsilon Pi']]]
+    .forEach(([a, d]) => test('Competitors', 'Which of these is a competing fraternity?', a, d));
+  return { cards, qs };
+}
+
+const pb = buildPbro(), hs = buildHistory();
+const TOPICS = [
+  { id:'pbro', name:'Pbro Information', blurb:'Everyone in the pledge class: majors, hometowns, birthdays, fun facts and sentimental items.', cards:pb.cards, qs:pb.qs },
+  { id:'history', name:'TT History', blurb:'National history, founders, motto and symbols, leadership, chapters and competitors, from AX Meeting 2.', cards:hs.cards, qs:hs.qs }
+];
+
+/* ---------- state ---------- */
+const S = {
+  tab: TOPICS.some(t => t.id === store.tab) ? store.tab : TOPICS[0].id,
+  mode: {}, fc: {}, ts: {}
+};
+TOPICS.forEach(t => {
+  S.mode[t.id] = 'cards';
+  S.fc[t.id] = { cat:'All', hideDone:false, deck:t.cards.map(c => c.id), i:0, flipped:false };
+  S.ts[t.id] = { phase:'setup', format:'mc', count:10, cat:'All', qs:[], i:0, picked:null, answers:[] };
+});
+const topic = () => TOPICS.find(t => t.id === S.tab);
+const mastered = t => t.cards.filter(c => store.cards[c.id] === 1).length;
+const cardById = (t, id) => t.cards.find(c => c.id === id);
+
+function rebuildDeck(t, doShuffle) {
+  const f = S.fc[t.id];
+  let ids = t.cards.filter(c => (f.cat === 'All' || c.cat === f.cat) && !(f.hideDone && store.cards[c.id] === 1)).map(c => c.id);
+  if (doShuffle) ids = shuffle(ids);
+  f.deck = ids; f.i = 0; f.flipped = false;
+}
+
+/* ---------- render ---------- */
+function render() {
+  const t = topic();
+  document.getElementById('tabs').innerHTML = TOPICS.map(x =>
+    '<button class="tab" role="tab" data-act="tab" data-id="' + x.id + '" aria-selected="' + (x.id === S.tab) + '">' + esc(x.name) +
+    '<span class="count">' + mastered(x) + '/' + x.cards.length + '</span></button>').join('');
+
+  const m = mastered(t), pct = Math.round(100 * m / t.cards.length), best = store.best[t.id];
+  const mode = S.mode[t.id];
+  let html =
+    '<div class="topic-head"><div><h2>' + esc(t.name) + '</h2><p class="blurb">' + esc(t.blurb) + '</p></div>' +
+    '<div class="seg" role="group" aria-label="Study mode">' +
+      '<button data-act="mode" data-mode="cards" aria-pressed="' + (mode === 'cards') + '">Flashcards</button>' +
+      '<button data-act="mode" data-mode="test" aria-pressed="' + (mode === 'test') + '">Test</button></div></div>' +
+    '<div class="stats"><div><div class="stat-label">Flashcards mastered</div><div class="stat-value">' + m + ' <small>of ' + t.cards.length + '</small></div><div class="bar"><i style="width:' + pct + '%"></i></div></div>' +
+    '<div><div class="stat-label">Best test score</div><div class="stat-value">' + (best ? best.correct + ' <small>of ' + best.total + ' (' + best.pct + '%)</small>' : '<small>No test taken yet</small>') + '</div></div></div>';
+  html += mode === 'cards' ? renderCards(t) : renderTest(t);
+  document.getElementById('panel').innerHTML = html;
+  const fr = document.getElementById('fr-input');
+  if (fr && !fr.disabled) fr.focus({ preventScroll:true });
+}
+
+function catOptions(items, current) {
+  return ['All'].concat(uniq(items.map(x => x.cat))).map(c => '<option value="' + esc(c) + '"' + (c === current ? ' selected' : '') + '>' + (c === 'All' ? 'All categories' : esc(c)) + '</option>').join('');
+}
+
+function renderCards(t) {
+  const f = S.fc[t.id];
+  let h = '<div class="controls">' +
+    '<label>Category <select id="fc-cat" data-act="fc-cat">' + catOptions(t.cards, f.cat) + '</select></label>' +
+    '<label><input type="checkbox" id="fc-hide" data-act="fc-hide"' + (f.hideDone ? ' checked' : '') + '> Hide mastered</label>' +
+    '<span class="spacer"></span>' +
+    '<button class="btn" data-act="fc-shuffle">Shuffle</button>' +
+    '<button class="btn ghost" data-act="fc-reset" id="fc-reset">' + (S.confirmReset === t.id ? 'Confirm reset' : 'Reset progress') + '</button></div>';
+  if (!f.deck.length) {
+    return h + '<div class="empty"><strong>No cards to show</strong><span class="blurb">Every card in this category is marked mastered.</span><button class="btn primary" data-act="fc-showall">Show all cards</button></div>';
+  }
+  if (f.i >= f.deck.length) f.i = 0;
+  const c = cardById(t, f.deck[f.i]);
+  const done = store.cards[c.id] === 1;
+  h += '<div class="flip' + (f.flipped ? ' is-flipped' : '') + '" data-act="flip" role="button" tabindex="0" aria-label="Flip card"><div class="flip-inner">' +
+    '<div class="face front"><div class="cat">' + esc(c.cat) + '</div>' + (done ? '<span class="chip">Mastered</span>' : '') + '<div class="text">' + esc(c.front) + '</div><div class="hint">Click or press space to flip</div></div>' +
+    '<div class="face back"><div class="cat">' + esc(c.cat) + '</div>' + (done ? '<span class="chip">Mastered</span>' : '') + '<div class="text">' + esc(c.back) + '</div></div>' +
+    '</div></div>' +
+    '<div class="card-nav"><button class="btn" data-act="prev" aria-label="Previous card">← Prev</button>' +
+    '<span class="counter">Card ' + (f.i + 1) + ' of ' + f.deck.length + '</span><span class="spacer"></span>' +
+    '<button class="btn" data-act="learning">Still learning</button>' +
+    '<button class="btn good" data-act="gotit">Got it</button>' +
+    '<button class="btn" data-act="next" aria-label="Next card">Next →</button></div>';
+  return h;
+}
+
+function renderTest(t) {
+  const s = S.ts[t.id];
+  if (s.phase === 'setup') {
+    const fmtQs = t.qs.filter(q => s.format === 'mc' || freeOK(q));
+    if (s.cat !== 'All' && !fmtQs.some(q => q.cat === s.cat)) s.cat = 'All';
+    const avail = testPool(t, s).length;
+    const counts = [10, 20].filter(n => n < avail);
+    const opts = counts.map(n => '<option value="' + n + '"' + (s.count === n ? ' selected' : '') + '>' + n + ' questions</option>').join('') +
+      '<option value="all"' + (s.count === 'all' || !counts.includes(s.count) ? ' selected' : '') + '>All ' + avail + ' questions</option>';
+    return '<div class="panel setup"><h3>Practice test</h3><p class="blurb">Questions are drawn at random from this topic. You see the answer after each one.' +
+      (s.format === 'fr' ? ' Free response skips the “which of these” questions, since they need answer choices.' : '') + '</p>' +
+      '<div class="seg" role="group" aria-label="Question format"><button data-act="ts-format" data-format="mc" aria-pressed="' + (s.format === 'mc') + '">Multiple choice</button>' +
+      '<button data-act="ts-format" data-format="fr" aria-pressed="' + (s.format === 'fr') + '">Free response</button></div>' +
+      '<div class="controls"><label>Category <select id="ts-cat" data-act="ts-cat">' + catOptions(fmtQs, s.cat) + '</select></label>' +
+      '<label>Length <select id="ts-count" data-act="ts-count">' + opts + '</select></label></div>' +
+      '<button class="btn primary" data-act="ts-start">Start test</button></div>';
+  }
+  if (s.phase === 'run') {
+    const q = s.qs[s.i], answered = s.picked !== null;
+    const right = s.answers.filter(a => a.ok).length;
+    let h = '<div class="panel"><div class="q-meta"><span>Question ' + (s.i + 1) + ' of ' + s.qs.length + '</span><span>' + right + ' correct</span></div>' +
+      '<div class="bar"><i style="width:' + Math.round(100 * s.i / s.qs.length) + '%"></i></div>' +
+      '<div class="q-prompt">' + esc(q.prompt) + '</div>';
+    if (s.format === 'fr') {
+      const last = s.answers[s.answers.length - 1], ok = answered && last.ok;
+      h += '<form id="fr-form" class="fr"><input id="fr-input" type="text" autocomplete="off" autocapitalize="off" spellcheck="false" placeholder="Type your answer" aria-label="Your answer"' +
+        (answered ? ' disabled value="' + esc(s.picked) + '"' : '') + '>' +
+        (answered ? '' : '<button class="btn primary" type="submit">Check</button><button class="btn ghost" type="button" data-act="fr-skip">I don’t know</button>') + '</form>';
+      if (answered) {
+        h += '<div class="feedback"><strong style="color:var(--' + (ok ? 'good' : 'bad') + ')">' + (ok ? 'Correct' : 'Not quite') + '</strong><span class="note">' + (ok ? '' : 'Answer: ' + esc(q.correct) + '. ') + esc(q.note || '') + '</span></div>' +
+          '<div class="feedback"><button class="btn" data-act="fr-flip">' + (ok ? 'Mark as incorrect' : 'Mark as correct') + '</button><span class="spacer"></span>' +
+          '<button class="btn primary" data-act="ts-next" id="ts-next">' + (s.i + 1 === s.qs.length ? 'See results' : 'Next question') + '</button></div>';
+      }
+      return h + '</div>';
+    }
+    h += '<div class="opts">';
+    q.options.forEach((o, i) => {
+      let cls = 'opt';
+      if (answered) { if (o === q.correct) cls += ' right'; else if (i === s.picked) cls += ' wrong'; }
+      h += '<button class="' + cls + '" data-act="pick" data-i="' + i + '"' + (answered ? ' disabled' : '') + '><span class="k">' + 'ABCD'[i] + '</span><span>' + esc(o) + '</span></button>';
+    });
+    h += '</div>';
+    if (answered) {
+      const ok = q.options[s.picked] === q.correct;
+      h += '<div class="feedback"><strong style="color:var(--' + (ok ? 'good' : 'bad') + ')">' + (ok ? 'Correct' : 'Not quite') + '</strong><span class="note">' + (ok ? '' : 'Answer: ' + esc(q.correct) + '. ') + esc(q.note || '') + '</span>' +
+        '<button class="btn primary" data-act="ts-next" id="ts-next">' + (s.i + 1 === s.qs.length ? 'See results' : 'Next question') + '</button></div>';
+    }
+    return h + '</div>';
+  }
+  const correct = s.answers.filter(a => a.ok).length, total = s.answers.length, pct = Math.round(100 * correct / total);
+  const missed = s.answers.filter(a => !a.ok);
+  const verdict = pct >= 90 ? 'Quiz-ready.' : pct >= 70 ? 'Close. Go over the misses below.' : 'Keep drilling the flashcards, then retake.';
+  let h = '<div class="panel result"><h3>Results</h3><div class="score">' + correct + '<small> / ' + total + ' (' + pct + '%)</small></div><p class="blurb">' + verdict + '</p>';
+  if (missed.length) {
+    h += '<h3>Missed</h3><ul class="missed">' + missed.map(a => '<li><span class="p">' + esc(a.q.prompt) + '</span><span class="yours">You answered: ' + esc(a.picked) + '</span><span class="right">Correct: ' + esc(a.q.correct) + '</span></li>').join('') + '</ul>';
+  }
+  h += '<div class="row">' + (missed.length ? '<button class="btn primary" data-act="ts-retry">Retake missed (' + missed.length + ')</button>' : '') + '<button class="btn' + (missed.length ? '' : ' primary') + '" data-act="ts-new">New test</button></div></div>';
+  return h;
+}
+
+/* ---------- free-response grading ---------- */
+const norm = s => s.toLowerCase().replace(/[‘’“”"']/g, '').replace(/(\d),(\d)/g, '$1$2').replace(/&/g, ' and ').replace(/[^a-z0-9\s]/g, ' ').replace(/\s+/g, ' ').trim();
+function lev(a, b) {
+  const d = Array.from({ length: a.length + 1 }, (_, i) => [i]);
+  for (let j = 1; j <= b.length; j++) d[0][j] = j;
+  for (let i = 1; i <= a.length; i++) for (let j = 1; j <= b.length; j++)
+    d[i][j] = Math.min(d[i-1][j] + 1, d[i][j-1] + 1, d[i-1][j-1] + (a[i-1] === b[j-1] ? 0 : 1));
+  return d[a.length][b.length];
+}
+function acceptable(answer) {
+  const out = new Set(), base = answer.replace(/^over\s+/i, '');
+  out.add(base);
+  const plain = base.replace(/\s*\([^)]*\)/g, '').trim();
+  out.add(plain);
+  const m = base.match(/\(([^)]*)\)/);
+  if (m && !/^\d{4}$/.test(m[1])) { const parts = plain.split(' '); parts[0] = m[1]; out.add(parts.join(' ')); }
+  return [...out].map(norm).filter(Boolean);
+}
+function gradeFree(user, correct) {
+  const u = norm(user);
+  if (!u) return false;
+  return acceptable(correct).some(c => {
+    if (u === c) return true;
+    const tol = /\d/.test(c) ? 0 : c.length >= 12 ? 2 : c.length >= 5 ? 1 : 0;
+    return tol > 0 && lev(u, c) <= tol;
+  });
+}
+const freeOK = q => !/^Which of these/.test(q.prompt);
+const testPool = (t, s) => t.qs.filter(q => (s.cat === 'All' || q.cat === s.cat) && (s.format === 'mc' || freeOK(q)));
+
+/* ---------- test logic ---------- */
+function prepQ(q) {
+  const options = shuffle([q.correct].concat(sample(uniq(q.pool).filter(x => x !== q.correct), 3)));
+  return Object.assign({}, q, { options });
+}
+function startTest(t, pool) {
+  const s = S.ts[t.id];
+  s.qs = pool.map(prepQ); s.i = 0; s.picked = null; s.answers = []; s.phase = 'run';
+}
+function finishTest(t) {
+  const s = S.ts[t.id];
+  const correct = s.answers.filter(a => a.ok).length, total = s.answers.length, pct = Math.round(100 * correct / total);
+  const b = store.best[t.id];
+  if (!b || pct > b.pct || (pct === b.pct && total > b.total)) { store.best[t.id] = { correct, total, pct }; save(); }
+  s.phase = 'done';
+}
+
+/* ---------- events ---------- */
+function advance(t, step) {
+  const f = S.fc[t.id];
+  f.i = (f.i + step + f.deck.length) % f.deck.length; f.flipped = false;
+}
+document.addEventListener('click', e => {
+  const el = e.target.closest('[data-act]');
+  if (!el || el.tagName === 'SELECT' || el.type === 'checkbox') return;
+  const t = topic(), a = el.dataset.act, f = S.fc[t.id], s = S.ts[t.id];
+  if (a !== 'fc-reset') S.confirmReset = null;
+  if (a === 'tab') { S.tab = el.dataset.id; store.tab = S.tab; save(); }
+  else if (a === 'mode') S.mode[t.id] = el.dataset.mode;
+  else if (a === 'flip') { f.flipped = !f.flipped; el.classList.toggle('is-flipped', f.flipped); return; }
+  else if (a === 'next') advance(t, 1);
+  else if (a === 'prev') advance(t, -1);
+  else if (a === 'gotit' || a === 'learning') { store.cards[f.deck[f.i]] = a === 'gotit' ? 1 : 0; save(); if (f.deck.length > 1) advance(t, 1); else f.flipped = false; }
+  else if (a === 'fc-shuffle') rebuildDeck(t, true);
+  else if (a === 'fc-showall') { f.cat = 'All'; f.hideDone = false; rebuildDeck(t, false); }
+  else if (a === 'fc-reset') {
+    if (S.confirmReset === t.id) { t.cards.forEach(c => delete store.cards[c.id]); save(); S.confirmReset = null; rebuildDeck(t, false); }
+    else S.confirmReset = t.id;
+  }
+  else if (a === 'ts-start') {
+    const pool = testPool(t, s);
+    const n = s.count === 'all' ? pool.length : Math.min(s.count, pool.length);
+    startTest(t, sample(pool, n));
+  }
+  else if (a === 'pick' && s.picked === null) {
+    s.picked = +el.dataset.i; const q = s.qs[s.i];
+    s.answers.push({ q, picked:q.options[s.picked], ok:q.options[s.picked] === q.correct });
+  }
+  else if (a === 'ts-format') { s.format = el.dataset.format; }
+  else if (a === 'fr-skip' && s.picked === null) { s.picked = ''; const q = s.qs[s.i]; s.answers.push({ q, picked:'(no answer)', ok:false }); }
+  else if (a === 'fr-flip') { const l = s.answers[s.answers.length - 1]; l.ok = !l.ok; }
+  else if (a === 'ts-next') { if (s.i + 1 === s.qs.length) finishTest(t); else { s.i++; s.picked = null; } }
+  else if (a === 'ts-retry') startTest(t, s.answers.filter(x => !x.ok).map(x => x.q));
+  else if (a === 'ts-new') { s.phase = 'setup'; }
+  render();
+  const nxt = document.getElementById('ts-next'); if (nxt && a === 'pick') nxt.focus({ preventScroll:true });
+});
+document.addEventListener('submit', e => {
+  e.preventDefault();
+  const t = topic(), s = S.ts[t.id];
+  const input = document.getElementById('fr-input');
+  if (!input || s.picked !== null || !input.value.trim()) return;
+  const q = s.qs[s.i];
+  s.picked = input.value.trim();
+  s.answers.push({ q, picked:s.picked, ok:gradeFree(s.picked, q.correct) });
+  render();
+  const nxt = document.getElementById('ts-next'); if (nxt) nxt.focus({ preventScroll:true });
+});
+document.addEventListener('change', e => {
+  const el = e.target.closest('[data-act]'); if (!el) return;
+  const t = topic(), f = S.fc[t.id], s = S.ts[t.id];
+  if (el.dataset.act === 'fc-cat') { f.cat = el.value; rebuildDeck(t, false); }
+  else if (el.dataset.act === 'fc-hide') { f.hideDone = el.checked; rebuildDeck(t, false); }
+  else if (el.dataset.act === 'ts-cat') { s.cat = el.value; }
+  else if (el.dataset.act === 'ts-count') { s.count = el.value === 'all' ? 'all' : +el.value; }
+  render();
+});
+document.addEventListener('keydown', e => {
+  if (e.target.closest('select,input,textarea')) return;
+  const t = topic();
+  if (S.mode[t.id] === 'cards' && S.fc[t.id].deck.length) {
+    if (e.key === 'ArrowRight') { advance(t, 1); render(); }
+    else if (e.key === 'ArrowLeft') { advance(t, -1); render(); }
+    else if ((e.key === ' ' || e.key === 'Enter') && !e.target.closest('button')) { e.preventDefault(); const fl = document.querySelector('.flip'); S.fc[t.id].flipped = !S.fc[t.id].flipped; if (fl) fl.classList.toggle('is-flipped', S.fc[t.id].flipped); }
+  }
+});
+render();
+</script>
+</body></html>
